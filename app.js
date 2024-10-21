@@ -1,5 +1,4 @@
 const express = require('express');
-const authenticateToken = require('./auth');
 require('dotenv').config();
 
 const app = express();
@@ -8,11 +7,26 @@ const port = process.env.PORT || 3001;
 // Middleware para interpretar JSON
 app.use(express.json());
 
+// Função para autenticar o token de acesso
+const authenticateToken = (req, res, next) => {
+    const token = req.header('Authorization');
+
+    if (!token) {
+        return res.status(401).json({ error: 'Token de acesso não fornecido' });
+    }
+
+    if (token !== process.env.ACCESS_TOKEN) {
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+
+    next();
+};
+
 // Função para remover caracteres especiais e validar CPF/CNPJ
 const cleanCpfCnpj = (value) => {
     // Remove qualquer traço, ponto ou barra
     return value.replace(/[^\d]/g, '');
-}
+};
 
 // Rota protegida que captura CPF ou CNPJ e retorna os dois últimos dígitos
 app.post('/api/cpf', authenticateToken, (req, res) => {
